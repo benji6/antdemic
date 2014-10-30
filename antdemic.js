@@ -129,40 +129,37 @@ function Environment () {
 	this.scentMapSize = 4096;
 	this.scentMapMinScent = .1;
 	this.createScent = function (x, y, foodTheta, scent) {
-	function mapToScale (num) {
-	var r = ScentMapObject.prototype.radius;
-	var quantum = Math.floor(Math.sqrt(2 * Math.pow(2 * r, 2)) / 2);
-	if (quantum === 0) {
-	quantum = 1;
-	}
-	return (num / quantum).toFixed(0) * quantum;
-	//return (num / ScentMapObject.prototype.radius).toFixed(0) * ScentMapObject.prototype.radius;
-	}
-
-
-
-	environment.scentMap.push(new ScentMapObject(mapToScale(x), mapToScale(y), foodTheta, scent));
+		function mapToScale (num) {
+			var r = ScentMapObject.prototype.radius;
+			var quantum = Math.floor(Math.sqrt(2 * Math.pow(2 * r, 2)) / 2);
+			if (quantum === 0) {
+				quantum = 1;
+			}
+			return (num / quantum).toFixed(0) * quantum;
+			//return (num / ScentMapObject.prototype.radius).toFixed(0) * ScentMapObject.prototype.radius;
+		}
+		environment.scentMap.push(new ScentMapObject(mapToScale(x), mapToScale(y), foodTheta, scent));
 	};
 	this.degradeScentMap = function () {
-	var num = this.scentMap.length;
-	var excessMap = num - this.scentMapSize;
-	//degrade scent
-	//this.scentMap = this.scentMap.map(function(x) {return x * .99;});
-	while (num--) {
-	this.scentMap[num].scent *= .995;
-	}
-	this.scentMap.sort(function (a, b) {return b.scent - a.scent;});
-	//kill off weak scents
-	var spliceFromIndex = this.scentMap.map(function (e) {if (e.scent < environment.scentMapMinScent) {return true;}}).indexOf(true);
-	this.scentMap.splice(spliceFromIndex, this.scentMap.length - spliceFromIndex);
-	if (excessMap > 0) {
-	this.scentMap.splice(this.scentMapSize, excessMap);
-	}
+		var num = this.scentMap.length;
+		var excessMap = num - this.scentMapSize;
+		//degrade scent
+		//this.scentMap = this.scentMap.map(function(x) {return x * .99;});
+		while (num--) {
+			this.scentMap[num].scent *= .995;
+		}
+		this.scentMap.sort(function (a, b) {return b.scent - a.scent;});
+		//kill off weak scents
+		var spliceFromIndex = this.scentMap.map(function (e) {if (e.scent < environment.scentMapMinScent) {return true;}}).indexOf(true);
+		this.scentMap.splice(spliceFromIndex, this.scentMap.length - spliceFromIndex);
+		if (excessMap > 0) {
+			this.scentMap.splice(this.scentMapSize, excessMap);
+		}
 	};
 	this.drawScentMap = function () {
-	for (var i = 0; i < environment.scentMap.length; i++) {
-	this.scentMap[i].draw(this.scentMap[i].color());
-	}
+		for (var i = 0; i < environment.scentMap.length; i++) {
+			this.scentMap[i].draw(this.scentMap[i].color());
+		}
 	};
 }
 environment = new Environment();
@@ -182,164 +179,71 @@ WorkerAnt.prototype.maxV = 2;
 WorkerAnt.prototype.dead = false;
 WorkerAnt.prototype.radius = 1.2;
 WorkerAnt.prototype.senseDist = WorkerAnt.prototype.radius * 16;
-WorkerAnt.prototype.decide = function() {
-	var separation;
-	var nearbyObjectsIndex, num;
-	var booWorkerAnt = false, booFeeder = false, booQueen = false, booScentMapObject = false;
-	//develop - refactor
-	function getClosestObjInfo(num) {
-
+WorkerAnt.prototype.decide = function () {
+	var ClosestObjInfo;
+	var booFeeder = false, booQueen = false, booScentMapObject = false;
+	function interact (constr, interactionRadius, callback) {
+		var num = this.nearbyObjects.length;
+		var separation = this.senseDist + 1;
+		var nearbyObjectsIndex;
+		while (num--) {
+			if (this.nearbyObjects[num].constructor === constr) {
+				if (Math.sqrt(Math.pow(this.nearbyObjects[num].x - this.x, 2) + Math.pow(this.nearbyObjects[num].y - this.y, 2)) < separation) {
+					nearbyObjectsIndex = num;
+					separation = Math.sqrt(Math.pow(this.nearbyObjects[num].x - this.x, 2) + Math.pow(this.nearbyObjects[num].y - this.y, 2));
+				}
+			}
+		}
+		if (separation <= interactionRadius) {
+			callback.call(this, nearbyObjectsIndex);
+			return true;
+		}
 	}
 	if (this.food === 0) {
 		//check contact with worker from different colony. NB - nearbyObjects should not contain ants from same colony
-		separation = canvas.width;
-		num = this.nearbyObjects.length;
-		while (num--) {
-			if (this.nearbyObjects[num].constructor === WorkerAnt) {
-				booWorkerAnt = true;
-				if (Math.sqrt(Math.pow(this.nearbyObjects[num].x - this.x, 2) + Math.pow(this.nearbyObjects[num].y - this.y, 2)) < separation) {
-					nearbyObjectsIndex = num;
-					separation = Math.sqrt(Math.pow(this.nearbyObjects[num].x - this.x, 2) + Math.pow(this.nearbyObjects[num].y - this.y, 2));
-				}
-			}
-		}
-		if (booWorkerAnt) {
-			if (separation < this.radius * 2) {
-				this.attack(this.nearbyObjects[nearbyObjectsIndex]);
-				this.nearbyObjects.splice(0, this.nearbyObjects.length);
-				return;
-			}
-		}
-		separation = canvas.width;
-		num = this.nearbyObjects.length;
-		while (num--) {
-			if (this.nearbyObjects[num].constructor === Feeder) {
-				booFeeder = true;
-				if (Math.sqrt(Math.pow(this.nearbyObjects[num].x - this.x, 2) + Math.pow(this.nearbyObjects[num].y - this.y, 2)) < separation) {
-					nearbyObjectsIndex = num;
-					separation = Math.sqrt(Math.pow(this.nearbyObjects[num].x - this.x, 2) + Math.pow(this.nearbyObjects[num].y - this.y, 2));
-				}
-			}
-		}
-		if (booFeeder) {
-			if (separation <= this.nearbyObjects[nearbyObjectsIndex].radius + this.radius) {
-				this.food = 1;
-				this.nearbyObjects[nearbyObjectsIndex].feed();
-				this.nearbyObjects.splice(0, this.nearbyObjects.length);
-				return;
-			} else {
-				this.phi = Math.atan2(this.nearbyObjects[nearbyObjectsIndex].y - this.y, this.nearbyObjects[nearbyObjectsIndex].x - this.x + Math.PI / 2);
-				this.movePolar();
-				this.nearbyObjects.splice(0, this.nearbyObjects.length);
-				return;
-			}
-		}
-		if (!this.borderControl()) {
-			separation = canvas.width;
-			num = this.nearbyObjects.length;
-			while (num--) {
-				if (this.nearbyObjects[num].constructor === ScentMapObject) {
-					booScentMapObject = true;
-					if (Math.sqrt(Math.pow(this.nearbyObjects[num].x - this.x, 2) + Math.pow(this.nearbyObjects[num].y - this.y, 2)) < separation) {
-						nearbyObjectsIndex = num;
-						separation = Math.sqrt(Math.pow(this.nearbyObjects[num].x - this.x, 2) + Math.pow(this.nearbyObjects[num].y - this.y, 2));
-					}
-				}
-			}
-			if (booScentMapObject) {
-				if (separation <= this.nearbyObjects[nearbyObjectsIndex].radius) {
-					var foodTheta = this.nearbyObjects[nearbyObjectsIndex].foodTheta;
-					if (foodTheta !== null) {
-						this.phi = foodTheta + Math.PI / 2;
-					}
-				}
-			}
+		if (interact.call(this, WorkerAnt, this.radius, function (nearbyObjectsIndex) {
+			this.attack(this.nearbyObjects[nearbyObjectsIndex]);
+			this.nearbyObjects.splice(0, this.nearbyObjects.length);
+		})) {return;}
+		//Check contact with feeder
+		if (interact.call(this, Feeder, Feeder.prototype.radius + this.radius, function (nearbyObjectsIndex) {
+			this.food = 1;
+			this.nearbyObjects[nearbyObjectsIndex].feed();
+			this.nearbyObjects.splice(0, this.nearbyObjects.length);
+		})) {return;}
+		//Check sense dist with feeder
+		if (interact.call(this, Feeder, this.senseDist, function (nearbyObjectsIndex) {
+			this.phi = Math.atan2(this.nearbyObjects[nearbyObjectsIndex].y - this.y, this.nearbyObjects[nearbyObjectsIndex].x - this.x + Math.PI / 2);
 			this.movePolar();
 			this.nearbyObjects.splice(0, this.nearbyObjects.length);
-			return;
+		})) {return;}
+		if (!this.borderControl()) {
+			//check detection of scentMap
+			interact.call(this, ScentMapObject, ScentMapObject.prototype.radius, function (nearbyObjectsIndex) {
+				this.phi = this.nearbyObjects[nearbyObjectsIndex].foodTheta + Math.PI / 2;
+			});
 		}
 	} else if (this.food === 1) {
-		separation = canvas.width;
-		num = this.nearbyObjects.length;
-		while (num--) {
-			if (this.nearbyObjects[num].constructor === Queen) {
-				if (this.nearbyObjects[num].colonyId === this.colonyId) {
-					booQueen = true;
-					if (Math.sqrt(Math.pow(this.nearbyObjects[num].x - this.x, 2) + Math.pow(this.nearbyObjects[num].y - this.y, 2)) < separation) {
-						nearbyObjectsIndex = num;
-						separation = Math.sqrt(Math.pow(this.nearbyObjects[num].x - this.x, 2) + Math.pow(this.nearbyObjects[num].y - this.y, 2));
-					}
-				}
-			}
-		}
-		if (booQueen) {
-			if (separation <= this.nearbyObjects[nearbyObjectsIndex].radius) {
+		//check contact with own queen
+		if (!interact.call(this, Queen, Queen.prototype.radius, function (nearbyObjectsIndex) {
 			this.food = 0;
 			this.nearbyObjects[nearbyObjectsIndex].feed();
 			this.phi += Math.PI;
 			this.nearbyObjects.splice(0, this.nearbyObjects.length);
-			return;
-			} else {
-				//go back to queen
-				separation = canvas.width;
-				this.phi = Math.atan2(colonies[this.colonyId].queen.y - this.y, colonies[this.colonyId].queen.x - this.x + Math.PI / 2);
-				num = this.nearbyObjects.length;
-				while (num--) {
-					if (this.nearbyObjects[num].constructor === ScentMapObject) {
-						booScentMapObject = true;
-						if (Math.sqrt(Math.pow(this.nearbyObjects[num].x - this.x, 2) + Math.pow(this.nearbyObjects[num].y - this.y, 2)) < separation) {
-							nearbyObjectsIndex = num;
-							separation = Math.sqrt(Math.pow(this.nearbyObjects[num].x - this.x, 2) + Math.pow(this.nearbyObjects[num].y - this.y, 2));
-						}
-					}
-				}
-				if (booScentMapObject) {
-					if (separation <= this.nearbyObjects[nearbyObjectsIndex].radius) {
-						if (foodTheta !== null) {
-							this.nearbyObjects[nearbyObjectsIndex].foodTheta = this.phi - 1.5 * Math.PI;
-						}
-						this.nearbyObjects[nearbyObjectsIndex].scent += 1;
-					} else {
-						environment.createScent(this.x, this.y, this.phi - 1.5 * Math.PI, 1);
-					}
-				} else {
-					environment.createScent(this.x, this.y, this.phi - 1.5 * Math.PI, 1);
-				}
-				this.movePolar();
-				this.nearbyObjects.splice(0, this.nearbyObjects.length);
-				return;
-			}
-		} else {
+		})) {
 			//go back to queen
-			separation = canvas.width;
 			this.phi = Math.atan2(colonies[this.colonyId].queen.y - this.y, colonies[this.colonyId].queen.x - this.x + Math.PI / 2);
-			num = this.nearbyObjects.length;
-			while (num--) {
-				if (this.nearbyObjects[num].constructor === ScentMapObject) {
-					booScentMapObject = true;
-					if (Math.sqrt(Math.pow(this.nearbyObjects[num].x - this.x, 2) + Math.pow(this.nearbyObjects[num].y - this.y, 2)) < separation) {
-						nearbyObjectsIndex = num;
-						separation = Math.sqrt(Math.pow(this.nearbyObjects[num].x - this.x, 2) + Math.pow(this.nearbyObjects[num].y - this.y, 2));
-					}
-				}
-			}
-			if (booScentMapObject) {
-				if (separation <= this.nearbyObjects[nearbyObjectsIndex].radius) {
-					if (foodTheta !== null) {
-						this.nearbyObjects[nearbyObjectsIndex].foodTheta = this.phi - 1.5 * Math.PI;
-					}
-					this.nearbyObjects[nearbyObjectsIndex].scent += 1;
-				} else {
-					environment.createScent(this.x, this.y, this.phi - 1.5 * Math.PI, 1);
-				}
-			} else {
+			//detect scent map and add / create scent
+			if (!interact.call(this, ScentMapObject, ScentMapObject.prototype.radius, function (nearbyObjectsIndex) {
+				this.nearbyObjects[nearbyObjectsIndex].foodTheta = this.phi - 1.5 * Math.PI;
+				this.nearbyObjects[nearbyObjectsIndex].scent += 1;
+			})) {
 				environment.createScent(this.x, this.y, this.phi - 1.5 * Math.PI, 1);
 			}
-			this.movePolar();
-			this.nearbyObjects.splice(0, this.nearbyObjects.length);
-			return;
 		}
 	}
+	this.movePolar();
+	this.nearbyObjects.splice(0, this.nearbyObjects.length);
 };
 WorkerAnt.prototype.movePolar = function() {
 	var spread = .1;
@@ -349,30 +253,19 @@ WorkerAnt.prototype.movePolar = function() {
 };
 WorkerAnt.prototype.borderControl = function () {
 	var bounceDist = this.radius + this.maxV;
+	function angleMove (angle) {
+		this.phi = -this.phi + angle;
+		this.movePolar();
+		return true;
+	}
 	if (this.x - bounceDist <= 0) {
-			if (Math.cos(this.phi) < 0) {
-			this.phi = -this.phi + Math.PI;
-			this.movePolar();
-			return true;
-		}
+		if (Math.cos(this.phi) < 0) {angleMove.call(this, Math.PI);}
 	} else if (this.x + bounceDist >= canvas.width) {
-		if (Math.cos(this.phi) > 0) {
-			this.phi = -this.phi + Math.PI;
-			this.movePolar();
-			return true;
-		}	
-	} else if (this.y - bounceDist <= 0 ) {
-		if (Math.sin(this.phi) < 0) {
-			this.phi = -this.phi;
-			this.movePolar();
-			return true;
-		}
+		if (Math.cos(this.phi) > 0) {angleMove.call(this, Math.PI);}	
+	} else if (this.y - bounceDist <= 0) {
+		if (Math.sin(this.phi) < 0) {angleMove.call(this, 0);}
 	} else if (this.y + bounceDist >= canvas.height) {
-		if (Math.sin(this.phi) > 0) {
-			this.phi = -this.phi;
-			this.movePolar();
-			return true;
-		}
+		if (Math.sin(this.phi) > 0) {angleMove.call(this, 0);}
 	}
 	return false;
 };
@@ -427,7 +320,7 @@ Feeder.prototype.feed = function() {
 		feeders.splice(feeders.indexOf(this), 1);
 	}
 };
-//setup new simulation
+//set up new simulation
 (function () {
 	var intFeeders = intColonies;
 	for (var i = 0; i < intFeeders; i++) {
