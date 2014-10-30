@@ -86,6 +86,19 @@
 				document.body.appendChild(canvas);
 
 				//model
+				//ScentMapObject
+				function ScentMapObject (x, y, foodTheta, scent) {
+					this.x = x;
+					this.y = y;
+					this.foodTheta = foodTheta;
+					this.scent = scent;
+				}
+				ScentMapObject.prototype = new CircleObject();
+				ScentMapObject.prototype.constructor = ScentMapObject;
+				ScentMapObject.prototype.radius = 3;
+				ScentMapObject.prototype.color = function () {
+					return 'rgb(127, 255, 255)';
+				};
 				//Environment
 				function Environment () {
 					this.allXYObjects = [];
@@ -142,23 +155,34 @@
 						}
 					};
 					this.scentMap = [];
-					this.scentMapSize = 4096;
+					this.scentMapSize = 2048;
 					this.scentMapMinScent = .1;
 					this.createScent = function (x, y, foodTheta, scent) {
-						environment.scentMap.push(new ScentMapObject(x, y, foodTheta, scent));
+						function mapToScale (num) {
+							var r = ScentMapObject.prototype.radius;
+							var quantum = Math.floor(Math.sqrt(2 * Math.pow(2 * r, 2)) / 2);
+							if (quantum === 0) {
+								quantum = 1;
+							}
+							return (num / quantum).toFixed(0) * quantum;
+							//return (num / ScentMapObject.prototype.radius).toFixed(0) * ScentMapObject.prototype.radius;
+						}
+						
+						
+						
+						environment.scentMap.push(new ScentMapObject(mapToScale(x), mapToScale(y), foodTheta, scent));
 					};
 					this.degradeScentMap = function () {	
 						var num = this.scentMap.length;
 						var excessMap = num - this.scentMapSize;
 						//degrade scent
+						//this.scentMap = this.scentMap.map(function(x) {return x * .99;});
 						while (num--) {
-							this.scentMap[num].scent *= 255 / 256;
+							this.scentMap[num].scent *= .995;
 						}
-						this.scentMap.sort(function (a, b) {
-							return Math.pow(b.scent, 2) - Math.pow(a.scent, 2);
-						});
+						this.scentMap.sort(function (a, b) {return b.scent - a.scent;});
 						//kill off weak scents
-						var spliceFromIndex = this.scentMap.map(function (e) { if (e.scent < environment.scentMapMinScent && e.scent > -environment.scentMapMinScent) { return true; } }).indexOf(true);
+						var spliceFromIndex = this.scentMap.map(function (e) {if (e.scent < environment.scentMapMinScent) {return true;}}).indexOf(true);
 						this.scentMap.splice(spliceFromIndex, this.scentMap.length - spliceFromIndex);
 						if (excessMap > 0) {
 							this.scentMap.splice(this.scentMapSize, excessMap);
@@ -171,19 +195,7 @@
 					};
 				}
 				environment = new Environment();
-				//ScentMapObject
-				function ScentMapObject (x, y, foodTheta, scent) {
-					this.x = x;
-					this.y = y;
-					this.foodTheta = foodTheta;
-					this.scent = scent;
-				}
-				ScentMapObject.prototype = new CircleObject();
-				ScentMapObject.prototype.constructor = ScentMapObject;
-				ScentMapObject.prototype.radius = 4;
-				ScentMapObject.prototype.color = function () {
-					return 'rgb(127, 255, 255)';
-				};
+
 				//Worker Ants
 				function WorkerAnt(x, y, colonyId) {
 					this.x = x;
@@ -197,8 +209,8 @@
 				WorkerAnt.prototype.constructor = WorkerAnt;
 				WorkerAnt.prototype.maxV = 2;
 				WorkerAnt.prototype.dead = false;
-				WorkerAnt.prototype.radius = 1.4;
-				WorkerAnt.prototype.senseDist = 6;
+				WorkerAnt.prototype.radius = 1.2;
+				WorkerAnt.prototype.senseDist = WorkerAnt.prototype.radius * 16;
 				WorkerAnt.prototype.decide = function() {
 					var separation;
 					var nearbyObjectsIndex, num;
@@ -290,14 +302,42 @@
 							}
 						}
 						if (booQueen) {
-							//devlog - if causes error?
-							//if (separation <= this.nearbyObjects[nearbyObjectsIndex].radius) {
+							if (separation <= this.nearbyObjects[nearbyObjectsIndex].radius) {
 								this.food = 0;
 								this.nearbyObjects[nearbyObjectsIndex].feed();
 								this.phi += Math.PI;
 								this.nearbyObjects.splice(0, this.nearbyObjects.length);
 								return;
-							//}
+							} else {
+								//go back to queen
+								separation = canvas.width;
+								this.phi = Math.atan2(colonies[this.colonyId].queen.y - this.y, colonies[this.colonyId].queen.x - this.x + Math.PI / 2);
+								num = this.nearbyObjects.length;
+								while (num--) {
+									if (this.nearbyObjects[num].constructor === ScentMapObject) {
+										booScentMapObject = true;
+										if (Math.sqrt(Math.pow(this.nearbyObjects[num].x - this.x, 2) + Math.pow(this.nearbyObjects[num].y - this.y, 2)) < separation) {
+											nearbyObjectsIndex = num;
+											separation = Math.sqrt(Math.pow(this.nearbyObjects[num].x - this.x, 2) + Math.pow(this.nearbyObjects[num].y - this.y, 2));
+										}
+									}
+								}
+								if (booScentMapObject) {
+									if (separation <= this.nearbyObjects[nearbyObjectsIndex].radius) {
+										if (foodTheta !== null) {
+											this.nearbyObjects[nearbyObjectsIndex].foodTheta = this.phi - 1.5 * Math.PI;
+										}
+										this.nearbyObjects[nearbyObjectsIndex].scent += 1;
+									} else {
+										environment.createScent(this.x, this.y, this.phi - 1.5 * Math.PI, 1);
+									}
+								} else {
+									environment.createScent(this.x, this.y, this.phi - 1.5 * Math.PI, 1);
+								}
+								this.movePolar();
+								this.nearbyObjects.splice(0, this.nearbyObjects.length);
+								return;
+							}
 						} else {
 							//go back to queen
 							separation = canvas.width;
@@ -318,6 +358,8 @@
 										this.nearbyObjects[nearbyObjectsIndex].foodTheta = this.phi - 1.5 * Math.PI;
 									}
 									this.nearbyObjects[nearbyObjectsIndex].scent += 1;
+								} else {
+									environment.createScent(this.x, this.y, this.phi - 1.5 * Math.PI, 1);
 								}
 							} else {
 								environment.createScent(this.x, this.y, this.phi - 1.5 * Math.PI, 1);
@@ -375,15 +417,16 @@
 					this.colonyId = colonyId;
 				}
 				Queen.prototype = new CircleObject();
-				Queen.prototype.radius = 3;
+				Queen.prototype.radius = WorkerAnt.prototype.radius * 2;
 				Queen.prototype.constructor = Queen;
 				Queen.prototype.feed = function() {
 					this.energy += 1;
 					this.spawn(this.colonyId);
 				};
 				Queen.prototype.spawn = function(colonyId) {
-					while (this.energy > 4) {
-						this.energy -= 4;
+					var spawnEnergy = 2;
+					while (this.energy > spawnEnergy) {
+						this.energy -= spawnEnergy;
 						colonies[colonyId].workers.push(new WorkerAnt(this.x, this.y, this.colonyId));
 					}
 				};
@@ -404,7 +447,7 @@
 				}
 				Feeder.prototype = new CircleObject();
 				Feeder.prototype.color = '#7777FF';
-				Feeder.prototype.radius = 4;
+				Feeder.prototype.radius = WorkerAnt.prototype.radius * 3;
 				Feeder.prototype.constructor = Feeder;
 				Feeder.prototype.feed = function() {
 					this.energy -= 1;
