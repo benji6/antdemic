@@ -9,7 +9,7 @@ window.requestAnimFrame=(function(){
 })();
 //model
 //declaration
-var intColonies = 8;
+var intColonies = 48;
 var environment;
 var workerAnts = [], queens = [], feeders = [], colonies = [];
 
@@ -46,9 +46,26 @@ function getMousePos(canvas, evt) {
 		y: evt.clientY - rect.top
 	};
 }
-canvas.addEventListener('click', function(evt) {
-	var mousePos = getMousePos(canvas, evt);
-	feeders[feeders.length] = new Feeder(mousePos.x, mousePos.y);
+canvas.addEventListener('contextmenu', function(e) {
+	e.preventDefault();
+	var mousePos = getMousePos(canvas, e);
+	var num = feeders.length
+	while (num--) {
+		if (mousePos.x > feeders[num].x - Feeder.prototype.radius && mousePos.x < feeders[num].x + Feeder.prototype.radius) {
+			if (mousePos.y > feeders[num].y - Feeder.prototype.radius && mousePos.y < feeders[num].y + Feeder.prototype.radius) {
+				feeders.splice(num, 1);
+			}
+		}
+	}
+	return false;
+}, false);
+canvas.addEventListener('click', function(e) {
+	var mousePos = getMousePos(canvas, e);
+	if (e.button === 0) {
+		feeders[feeders.length] = new Feeder(mousePos.x, mousePos.y);
+	}/* else if (e.button === 2) {
+		right click code should go here
+	}*/
 }, false);
 
 //view
@@ -68,7 +85,7 @@ ScentMapObject.prototype = new CircleObject();
 ScentMapObject.prototype.constructor = ScentMapObject;
 ScentMapObject.prototype.radius = 3;
 ScentMapObject.prototype.color = function () {
-return 'rgb(127, 255, 255)';
+	return 'rgb(127, 255, 255)';
 };
 //Environment
 function Environment () {
@@ -95,7 +112,8 @@ function Environment () {
 		}
 		function searchLeftRight (j, obj0) {
 			obj1 = environment.allXYObjects[j];
-			if (!(obj1.constructor === WorkerAnt && obj1.colonyId === obj0.colonyId)) {
+			//do not include ants from the same colony or queens from different colonies in nearbyObjects
+			if (!(obj1.constructor === WorkerAnt && obj1.colonyId === obj0.colonyId) && !(obj1.constructor === Queen && obj1.colonyId !== obj0.colonyId)) {
 				if (checkInteraction(obj0, obj1, obj0.senseDist)) {
 					obj0.nearbyObjects.push(obj1);
 				} else {
@@ -111,16 +129,12 @@ function Environment () {
 				j = i;
 				//check left
 				while (--j >= 0) {
-					if (!searchLeftRight (j, obj0)) {
-						break;
-					}
+					if (!searchLeftRight (j, obj0)) {break;}
 				}
 				j = i;
 				//check right
 				while (++j < environment.allXYObjects.length) {
-					if (!searchLeftRight (j, obj0)) {
-						break;
-					}
+					if (!searchLeftRight (j, obj0)) {break;}
 				}
 			}
 		}
@@ -224,7 +238,7 @@ WorkerAnt.prototype.decide = function () {
 			});
 		}
 	} else if (this.food === 1) {
-		//check contact with own queen
+		//check contact with queen. NB - nearbyObjects should not contain queens from different colonies
 		if (!interact.call(this, Queen, Queen.prototype.radius, function (nearbyObjectsIndex) {
 			this.food = 0;
 			this.nearbyObjects[nearbyObjectsIndex].feed();
@@ -277,7 +291,7 @@ WorkerAnt.prototype.attack = function (ant) {
 function Queen(x, y, colonyId) {
 	this.x = x;
 	this.y = y;
-	this.energy = 256;
+	this.energy = 3;
 	this.colonyId = colonyId;
 }
 Queen.prototype = new CircleObject();
@@ -288,8 +302,8 @@ Queen.prototype.feed = function() {
 	this.spawn(this.colonyId);
 };
 Queen.prototype.spawn = function(colonyId) {
-	var spawnEnergy = 2;
-	while (this.energy > spawnEnergy) {
+	var spawnEnergy = 3;
+	while (this.energy >= spawnEnergy) {
 		this.energy -= spawnEnergy;
 		colonies[colonyId].workers.push(new WorkerAnt(this.x, this.y, this.colonyId));
 	}
@@ -322,7 +336,7 @@ Feeder.prototype.feed = function() {
 };
 //set up new simulation
 (function () {
-	var intFeeders = intColonies;
+	var intFeeders = intColonies - 1;
 	for (var i = 0; i < intFeeders; i++) {
 		feeders[i] = new Feeder(Math.random() * (canvas.width - 2 * Feeder.prototype.radius) + Feeder.prototype.radius, Math.random() * (canvas.height - 2 * Feeder.prototype.radius) + Feeder.prototype.radius, i);
 	}
@@ -343,6 +357,7 @@ Feeder.prototype.feed = function() {
 				if (colonies[i].workers.length === 0) {
 					//delete colonies[i].queen;
 					colonies[i].dead = true;
+					feeders.pop();
 				}
 			} else {
 				colonies[i].workers[j].decide();
