@@ -11,4 +11,10 @@ button {
   width: 16em;
   height: 2em;
 }
+input {
+  display: block;
+  margin: auto;
+  width: 16em;
+  height: 2em;
+}
 
