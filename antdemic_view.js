@@ -1,3 +1,4 @@
+var animationBlurAlpha = .17;
 //requestAnimFrame
 window.requestAnimFrame=(function(){
 	return  window.requestAnimationFrame ||
@@ -9,7 +10,7 @@ window.requestAnimFrame=(function(){
 })();
 //draw
 function draw() {
-	context.fillStyle = 'rgba(255, 255, 255, .17)';
+	context.fillStyle = 'rgba(255, 255, 255, ' + animationBlurAlpha + ')';
 	context.fillRect(0, 0, canvas.width, canvas.height);
 	environment.degradeScentMap();
 	if (scentMapSwitch) {

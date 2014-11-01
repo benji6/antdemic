@@ -2,8 +2,18 @@ var scentMapSwitch = false;
 var statsSwitch = true;
 var scentMapButton = document.createElement('button');
 var statsButton = document.createElement('button');
+var animationBlurLabel = document.createElement('label');
+animationBlurLabel.innerHTML = 'Adjust Animation Blur Effect';
 var animationBlurRange = document.createElement('input');
 animationBlurRange.setAttribute('type', 'range');
+animationBlurRange.setAttribute('min', '1');
+animationBlurRange.setAttribute('max', '64');
+animationBlurRange.setAttribute('step', '1');
+animationBlurRange.setAttribute('value', 1 / animationBlurAlpha);
+animationBlurRange.onchange = function () {
+	animationBlurAlpha = 1 / this.value;
+};
+animationBlurLabel.appendChild(animationBlurRange);
 scentMapButton.innerHTML = 'Show / Hide Scent Map';
 statsButton.innerHTML = 'Show / Hide Stats';
 scentMapButton.onclick = function () { scentMapSwitch = !scentMapSwitch; };
@@ -35,8 +45,8 @@ canvas.addEventListener('click', function(e) {
 	}
 }, false);
 
-
+//dom
 document.body.appendChild(statsButton);
 document.body.appendChild(scentMapButton);
-document.body.appendChild(animationBlurRange);
+document.body.appendChild(animationBlurLabel);
 document.body.appendChild(canvas);

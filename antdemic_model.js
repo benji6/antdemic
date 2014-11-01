@@ -1,4 +1,3 @@
-
 //declaration
 var intColonies = 48;
 var environment;
@@ -132,7 +131,7 @@ WorkerAnt.prototype = new CircleObject();
 WorkerAnt.prototype.constructor = WorkerAnt;
 WorkerAnt.prototype.maxV = 2;
 WorkerAnt.prototype.dead = false;
-WorkerAnt.prototype.radius = 1;
+WorkerAnt.prototype.radius = 1.1;
 WorkerAnt.prototype.senseDist = WorkerAnt.prototype.radius * 16;
 WorkerAnt.prototype.decide = function () {
 	var ClosestObjInfo;

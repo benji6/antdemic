@@ -1,14 +1,13 @@
 body {
-  margin: 0;
+	margin: 0;
 }
 canvas {
-  display: block;
-  margin: .5em auto;
+	display: block;
+	margin: .5em auto;
 }
-button, input {
-  display: block;
-  margin: auto;
-  width: 16em;
-  height: 2em;
+button, input, label {
+	display: block;
+	margin: .1em auto;
+	text-align: center;
+	width: 24em;
 }
-
