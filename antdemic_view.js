@@ -44,6 +44,6 @@ function draw() {
 		}
 		context.fillStyle = 'blue';
 		context.fillText('Total Worker Ants: ' + totalWorkers, 0, 10 * liveColonies + 10);
-		context.fillText('Total ScentMapObjects: ' + environment.scentMap.length, 0, 10 * (liveColonies + 1) + 10);
+		context.fillText('Scent Map Size: ' + environment.scentMap.length, 0, 10 * (liveColonies + 1) + 10);
 	}
 }

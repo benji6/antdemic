@@ -3,7 +3,7 @@ var statsSwitch = true;
 var scentMapButton = document.createElement('button');
 var statsButton = document.createElement('button');
 var animationBlurLabel = document.createElement('label');
-animationBlurLabel.innerHTML = 'Adjust Animation Blur Effect';
+animationBlurLabel.innerHTML = 'Adjust Motion Blur Effect';
 var animationBlurRange = document.createElement('input');
 animationBlurRange.setAttribute('type', 'range');
 animationBlurRange.setAttribute('min', '1');
