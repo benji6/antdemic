@@ -7,7 +7,7 @@ animationBlurLabel.innerHTML = 'Adjust Motion Blur Effect';
 var animationBlurRange = document.createElement('input');
 animationBlurRange.setAttribute('type', 'range');
 animationBlurRange.setAttribute('min', '1');
-animationBlurRange.setAttribute('max', '64');
+animationBlurRange.setAttribute('max', '16');
 animationBlurRange.setAttribute('step', '1');
 animationBlurRange.setAttribute('value', 1 / animationBlurAlpha);
 animationBlurRange.onchange = function () {

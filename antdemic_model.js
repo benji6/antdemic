@@ -2,13 +2,11 @@
 var intColonies = 48;
 var environment;
 var workerAnts = [], queens = [], feeders = [], colonies = [];
-
 //canvas setup
 canvas = document.createElement('canvas');
 canvas.width = 640;
 canvas.height = canvas.width;
 context = canvas.getContext('2d');
-
 //Circle Object
 function CircleObject() {
 	this.draw = function (color) {
@@ -19,105 +17,6 @@ function CircleObject() {
 		context.fill();
 	};
 }
-
-//ScentMapObject
-function ScentMapObject (x, y, foodTheta, scent) {
-	this.x = x;
-	this.y = y;
-	this.foodTheta = foodTheta;
-	this.scent = scent;
-}
-ScentMapObject.prototype = new CircleObject();
-ScentMapObject.prototype.constructor = ScentMapObject;
-ScentMapObject.prototype.radius = 3;
-ScentMapObject.prototype.color = function () {
-	return 'rgb(127, 255, 255)';
-};
-//Environment
-function Environment () {
-	this.allXYObjects = [];
-	this.getAllXYObjects = function () {
-		this.allXYObjects.splice(0, this.allXYObjects.length);
-		this.allXYObjects = this.scentMap.concat(feeders);
-		for (var i = 0; i < colonies.length; i++) {
-			this.allXYObjects = this.allXYObjects.concat(colonies[i].workers, colonies[i].queen);
-		}
-	};
-	this.getInteractions = function () {
-		var j;
-		var obj0, obj1;
-		function checkInteraction (obj0, obj1, interactionDist) {
-			var xSeparation = obj0.x - obj1.x;
-			if (xSeparation < interactionDist && xSeparation > -interactionDist) {
-				var ySeparation = obj0.y - obj1.y;
-				if (ySeparation < interactionDist && ySeparation > -interactionDist) {
-					return true;
-				}
-			}
-			return false;
-		}
-		function searchLeftRight (j, obj0) {
-			obj1 = environment.allXYObjects[j];
-			//do not include ants from the same colony or queens from different colonies in nearbyObjects
-			if (!(obj1.constructor === WorkerAnt && obj1.colonyId === obj0.colonyId) && !(obj1.constructor === Queen && obj1.colonyId !== obj0.colonyId)) {
-				if (checkInteraction(obj0, obj1, obj0.senseDist)) {
-					obj0.nearbyObjects.push(obj1);
-				} else {
-					return true;
-				}
-			}
-			return false;
-		}
-		this.allXYObjects.sort(function (a, b) {return a.x - b.x;});
-		for (var i = 0; i < this.allXYObjects.length; i++) {
-			obj0 = environment.allXYObjects[i];
-			if (obj0.constructor === WorkerAnt) {
-				j = i;
-				//check left
-				while (--j >= 0) {
-					if (!searchLeftRight (j, obj0)) {break;}
-				}
-				j = i;
-				//check right
-				while (++j < environment.allXYObjects.length) {
-					if (!searchLeftRight (j, obj0)) {break;}
-				}
-			}
-		}
-	};
-	this.scentMap = [];
-	this.scentMapSize = 2048;
-	this.scentMapMinScent = .1;
-	this.createScent = function (x, y, foodTheta, scent) {
-		function mapToScale (num) {
-			quantum = ScentMapObject.prototype.radius * 2;
-			return (num / quantum).toFixed(0) * quantum;
-		}
-		environment.scentMap.push(new ScentMapObject(mapToScale(x), mapToScale(y), foodTheta, scent));
-	};
-	this.degradeScentMap = function () {
-		var num = this.scentMap.length;
-		var excessMap = num - this.scentMapSize;
-		//degrade scent
-		while (num--) {
-			this.scentMap[num].scent *= .995;
-		}
-		this.scentMap.sort(function (a, b) {return b.scent - a.scent;});
-		//kill off weak scents
-		var spliceFromIndex = this.scentMap.map(function (e) {if (e.scent < environment.scentMapMinScent) {return true;}}).indexOf(true);
-		this.scentMap.splice(spliceFromIndex, this.scentMap.length - spliceFromIndex);
-		if (excessMap > 0) {
-			this.scentMap.splice(this.scentMapSize, excessMap);
-		}
-	};
-	this.drawScentMap = function () {
-		for (var i = 0; i < environment.scentMap.length; i++) {
-			this.scentMap[i].draw(this.scentMap[i].color());
-		}
-	};
-}
-environment = new Environment();
-
 //Worker Ants
 function WorkerAnt(x, y, colonyId) {
 	this.x = x;
@@ -131,7 +30,7 @@ WorkerAnt.prototype = new CircleObject();
 WorkerAnt.prototype.constructor = WorkerAnt;
 WorkerAnt.prototype.maxV = 2;
 WorkerAnt.prototype.dead = false;
-WorkerAnt.prototype.radius = 1.1;
+WorkerAnt.prototype.radius = 1.2;
 WorkerAnt.prototype.senseDist = WorkerAnt.prototype.radius * 16;
 WorkerAnt.prototype.decide = function () {
 	var ClosestObjInfo;
@@ -226,7 +125,103 @@ WorkerAnt.prototype.borderControl = function () {
 WorkerAnt.prototype.attack = function (ant) {
 	ant.dead = true;
 };
-
+//ScentMapObject
+function ScentMapObject (x, y, foodTheta, scent) {
+	this.x = x;
+	this.y = y;
+	this.foodTheta = foodTheta;
+	this.scent = scent;
+}
+ScentMapObject.prototype = new CircleObject();
+ScentMapObject.prototype.constructor = ScentMapObject;
+ScentMapObject.prototype.radius = WorkerAnt.prototype.radius * 3;
+ScentMapObject.prototype.color = function () {
+	return 'rgb(127, 255, 255)';
+};
+//Environment
+function Environment () {
+	this.allXYObjects = [];
+	this.getAllXYObjects = function () {
+		this.allXYObjects.splice(0, this.allXYObjects.length);
+		this.allXYObjects = this.scentMap.concat(feeders);
+		for (var i = 0; i < colonies.length; i++) {
+			this.allXYObjects = this.allXYObjects.concat(colonies[i].workers, colonies[i].queen);
+		}
+	};
+	this.getInteractions = function () {
+		var j;
+		var obj0, obj1;
+		function checkInteraction (obj0, obj1, interactionDist) {
+			var xSeparation = obj0.x - obj1.x;
+			if (xSeparation < interactionDist && xSeparation > -interactionDist) {
+				var ySeparation = obj0.y - obj1.y;
+				if (ySeparation < interactionDist && ySeparation > -interactionDist) {
+					return true;
+				}
+			}
+			return false;
+		}
+		function searchLeftRight (j, obj0) {
+			obj1 = environment.allXYObjects[j];
+			//do not include ants from the same colony or queens from different colonies in nearbyObjects
+			if (!(obj1.constructor === WorkerAnt && obj1.colonyId === obj0.colonyId) && !(obj1.constructor === Queen && obj1.colonyId !== obj0.colonyId)) {
+				if (checkInteraction(obj0, obj1, obj0.senseDist)) {
+					obj0.nearbyObjects.push(obj1);
+				} else {
+					return true;
+				}
+			}
+			return false;
+		}
+		this.allXYObjects.sort(function (a, b) {return a.x - b.x;});
+		for (var i = 0; i < this.allXYObjects.length; i++) {
+			obj0 = environment.allXYObjects[i];
+			if (obj0.constructor === WorkerAnt) {
+				j = i;
+				//check left
+				while (--j >= 0) {
+					if (!searchLeftRight (j, obj0)) {break;}
+				}
+				j = i;
+				//check right
+				while (++j < environment.allXYObjects.length) {
+					if (!searchLeftRight (j, obj0)) {break;}
+				}
+			}
+		}
+	};
+	this.scentMap = [];
+	this.scentMapSize = 1024;
+	this.scentMapMinScent = .1;
+	this.createScent = function (x, y, foodTheta, scent) {
+		function mapToScale (num) {
+			quantum = ScentMapObject.prototype.radius * 2;
+			return (num / quantum).toFixed(0) * quantum;
+		}
+		environment.scentMap.push(new ScentMapObject(mapToScale(x), mapToScale(y), foodTheta, scent));
+	};
+	this.degradeScentMap = function () {
+		var num = this.scentMap.length;
+		var excessMap = num - this.scentMapSize;
+		//degrade scent
+		while (num--) {
+			this.scentMap[num].scent *= .995;
+		}
+		this.scentMap.sort(function (a, b) {return b.scent - a.scent;});
+		//kill off weak scents
+		var spliceFromIndex = this.scentMap.map(function (e) {if (e.scent < environment.scentMapMinScent) {return true;}}).indexOf(true);
+		this.scentMap.splice(spliceFromIndex, this.scentMap.length - spliceFromIndex);
+		if (excessMap > 0) {
+			this.scentMap.splice(this.scentMapSize, excessMap);
+		}
+	};
+	this.drawScentMap = function () {
+		for (var i = 0; i < environment.scentMap.length; i++) {
+			this.scentMap[i].draw(this.scentMap[i].color());
+		}
+	};
+}
+environment = new Environment();
 //Queens
 function Queen(x, y, colonyId) {
 	this.x = x;
@@ -255,13 +250,12 @@ function Colony (colonyId) {
 	this.colonyId = colonyId;
 	this.color = 'rgb(' + (this.colonyId * 255 / (intColonies - 1)).toFixed(0) + ', 0, 0)';
 }
-
 //Feeders
 function Feeder(x, y, feederId) {
 	this.x = x;
 	this.y = y;
 	this.feederId = feederId;
-	this.energy = 64;
+	this.energy = 128;
 }
 Feeder.prototype = new CircleObject();
 Feeder.prototype.color = '#7777FF';
