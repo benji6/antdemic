@@ -5,13 +5,7 @@ canvas {
   display: block;
   margin: .5em auto;
 }
-button {
-  display: block;
-  margin: auto;
-  width: 16em;
-  height: 2em;
-}
-input {
+button, input {
   display: block;
   margin: auto;
   width: 16em;
