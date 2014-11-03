@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<?php include '../includes/head_template.php' ?>
+		{{> head }}
 	</head>
 	<body>
-		<?php include '../includes/header_template.php' ?>
+		{{> header }}
 		<h2>Antdemic</h2>
 		<h3>About</h3>
 		<p>
@@ -21,7 +21,7 @@
 		<script src="antdemic_view.js"></script>
 		<script src="antdemic_controller.js"></script>
 		<script>run();</script>
-		<?php include '../includes/template_scripts.php' ?>
+		{{> scripts }}
 		<script>shifterOn = false; //deactivate shifter from template script to free up resources</script>
 	</body>
 </html>
