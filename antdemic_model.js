@@ -33,8 +33,6 @@ WorkerAnt.prototype.dead = false;
 WorkerAnt.prototype.radius = 1.2;
 WorkerAnt.prototype.senseDist = WorkerAnt.prototype.radius * 16;
 WorkerAnt.prototype.decide = function () {
-	var ClosestObjInfo;
-	var booFeeder = false, booQueen = false, booScentMapObject = false;
 	function interact (constr, interactionRadius, callback) {
 		var num = this.nearbyObjects.length;
 		var separation = this.senseDist + 1;
@@ -155,7 +153,8 @@ function Environment () {
 			var xSeparation = obj0.x - obj1.x;
 			if (xSeparation < interactionDist && xSeparation > -interactionDist) {
 				var ySeparation = obj0.y - obj1.y;
-				if (ySeparation < interactionDist && ySeparation > -interactionDist) {
+				var objRadius = Math.sqrt(Math.pow(xSeparation, 2) + Math.pow(ySeparation, 2));
+				if (objRadius < interactionDist) {
 					return true;
 				}
 			}
