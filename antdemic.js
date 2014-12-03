@@ -315,7 +315,7 @@ function run () {
 //
 var viewHolder = document.createElement('div');
 //Text View
-(function createTxtView() {
+(function initView() {
 	var curry = function(func) {
 		var curried = function(args) {
 			if (args.length >= func.length) {
@@ -330,13 +330,13 @@ var viewHolder = document.createElement('div');
 	var addView = function(parentEl, childEl, txtNode) {
 		var childElement = document.createElement(childEl);
 		childElement.appendChild(document.createTextNode(txtNode));
-		parentEl.appendChild(childElement);       
-	};	
-	var curryAddView = curry(addView);	
-	var addViewToVH = curryAddView(viewHolder);	
+		parentEl.appendChild(childElement);
+	};
+	var curryAddView = curry(addView);
+	var addViewToVH = curryAddView(viewHolder);
 	var addH2 = addViewToVH('h2');
 	var addH3 = addViewToVH('h3');
-	var addP = addViewToVH('p');	
+	var addP = addViewToVH('p');
 	
 	addH2('Antdemic');
 	addH3('About');
@@ -348,7 +348,16 @@ var viewHolder = document.createElement('div');
 		'If a colony loses all its ants the queen will perish and the number of feeders on the canvas is reduced.');
 	addH3('Controls');
 	addP('Left click on the canvas to add a feeder and right click on a feeder to remove it.');
+	
+
 }());
+function appendView() {
+	viewHolder.appendChild(statsButton);
+	viewHolder.appendChild(scentMapButton);
+	viewHolder.appendChild(animationBlurLabel);
+	viewHolder.appendChild(canvas);
+	document.body.appendChild(viewHolder);
+}
 
 var animationBlurAlpha = .17;
 //requestAnimFrame
@@ -462,15 +471,10 @@ canvas.addEventListener('click', function(e) {
 	}
 }, false);
 
-//dom
 
-viewHolder.appendChild(statsButton);
-viewHolder.appendChild(scentMapButton);
-viewHolder.appendChild(animationBlurLabel);
-viewHolder.appendChild(canvas);
-document.body.appendChild(viewHolder);
 
 function on() {
+	appendView();
 	running = true;
 	run();
 }
