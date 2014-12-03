@@ -316,28 +316,38 @@ function run () {
 var viewHolder = document.createElement('div');
 //Text View
 (function createTxtView() {
-	var h2 = document.createElement('h2');
-	var h3 = document.createElement('h3');
-	var h3b = document.createElement('h3');
-	var p = document.createElement('p');
-	var p2 = document.createElement('p');
-
-	h2.appendChild(document.createTextNode('Antdemic'));
-	h3.appendChild(document.createTextNode('About'));
-	p.appendChild(document.createTextNode('Each worker ant has a very limited sense distance and finds food using scent trails laid down by other worker ants.'));
-	p.appendChild(document.createTextNode('Worker ants instinctively know their way back to their queen and feed her.'));
-	p.appendChild(document.createTextNode('As the queen feeds she spawns new workers.'));
-	p.appendChild(document.createTextNode('Each feeder has a limited food supply and when it is used up a new feeder is spawned in a new location.'));
-	p.appendChild(document.createTextNode('Worker ants will attack worker ants from other colonies if they come into contact.'));
-	p.appendChild(document.createTextNode('If a colony loses all its ants the queen will perish and the number of feeders on the canvas is reduced.'));
-	h3b.appendChild(document.createTextNode('Controls'));
-	p2.appendChild(document.createTextNode('Left click on the canvas to add a feeder and right click on a feeder to remove it.'));
-
-	viewHolder.appendChild(h2);
-	viewHolder.appendChild(h3);
-	viewHolder.appendChild(p);
-	viewHolder.appendChild(h3b);
-	viewHolder.appendChild(p2);
+	var curry = function(func) {
+		var curried = function(args) {
+			if (args.length >= func.length) {
+				return func.apply(null, args);
+			}
+			return function() {
+				return curried(args.concat(Array.prototype.slice.apply(arguments)));
+			};
+		};
+		return curried(Array.prototype.slice.apply(arguments, [1]));
+	};
+	var addView = function(parentEl, childEl, txtNode) {
+		var childElement = document.createElement(childEl);
+		childElement.appendChild(document.createTextNode(txtNode));
+		parentEl.appendChild(childElement);       
+	};	
+	var curryAddView = curry(addView);	
+	var addViewToVH = curryAddView(viewHolder);	
+	var addH2 = addViewToVH('h2');
+	var addH3 = addViewToVH('h3');
+	var addP = addViewToVH('p');	
+	
+	addH2('Antdemic');
+	addH3('About');
+	addP('Each worker ant has a very limited sense distance and finds food using scent trails laid down by other worker ants.' +
+		'Worker ants instinctively know their way back to their queen and feed her.' +
+		'As the queen feeds she spawns new workers.' +
+		'Each feeder has a limited food supply and when it is used up a new feeder is spawned in a new location.'+
+		'Worker ants will attack worker ants from other colonies if they come into contact.' +
+		'If a colony loses all its ants the queen will perish and the number of feeders on the canvas is reduced.');
+	addH3('Controls');
+	addP('Left click on the canvas to add a feeder and right click on a feeder to remove it.');
 }());
 
 var animationBlurAlpha = .17;
