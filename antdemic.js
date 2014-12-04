@@ -7,10 +7,10 @@ var intColonies = 48;
 var environment;
 var workerAnts = [], queens = [], feeders = [], colonies = [];
 //canvas setup
-canvas = document.createElement('canvas');
+var canvas = document.createElement('canvas');
 canvas.width = 640;
 canvas.height = canvas.width;
-context = canvas.getContext('2d');
+var context = canvas.getContext('2d');
 //Circle Object
 function CircleObject() {
 	this.draw = function (color) {
@@ -198,7 +198,7 @@ function Environment () {
 	this.scentMapMinScent = .1;
 	this.createScent = function (x, y, foodTheta, scent) {
 		function mapToScale (num) {
-			quantum = ScentMapObject.prototype.radius * 2;
+			var quantum = ScentMapObject.prototype.radius * 2;
 			return (num / quantum).toFixed(0) * quantum;
 		}
 		environment.scentMap.push(new ScentMapObject(mapToScale(x), mapToScale(y), foodTheta, scent));
