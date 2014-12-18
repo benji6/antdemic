@@ -273,11 +273,12 @@ Feeder.prototype.feed = function() {
 };
 //set up new simulation
 (function () {
+	var i;
 	var intFeeders = intColonies - 1;
-	for (var i = 0; i < intFeeders; i++) {
+	for (i = 0; i < intFeeders; i++) {
 		feeders[i] = new Feeder(Math.random() * (canvas.width - 2 * Feeder.prototype.radius) + Feeder.prototype.radius, Math.random() * (canvas.height - 2 * Feeder.prototype.radius) + Feeder.prototype.radius, i);
 	}
-	for (var i = 0; i < intColonies; i++) {
+	for (i = 0; i < intColonies; i++) {
 		colonies[i] = new Colony(i);
 		colonies[i].queen.spawn(i);
 	}
@@ -371,21 +372,22 @@ window.requestAnimFrame=(function(){
 })();
 //draw
 function draw() {
+	var i;
 	context.fillStyle = 'rgba(255, 255, 255, ' + animationBlurAlpha + ')';
 	context.fillRect(0, 0, canvas.width, canvas.height);
 	environment.degradeScentMap();
 	if (scentMapSwitch) {
 		environment.drawScentMap();
 	}
-	for (var i = 0; i < colonies.length; i++) {
+	for (i = 0; i < colonies.length; i++) {
 		if (!colonies[i].dead) {
 			colonies[i].queen.draw(colonies[i].color);
 		}
 	}
-	for (var i = 0; i < feeders.length; i++) {
+	for (i = 0; i < feeders.length; i++) {
 		feeders[i].draw(feeders[i].color);
 	}
-	for (var i = 0; i < colonies.length; i++) {
+	for (i = 0; i < colonies.length; i++) {
 		for (var j = 0; j < colonies[i].workers.length; j++) {
 			colonies[i].workers[j].draw(colonies[i].color);
 		}
@@ -395,7 +397,7 @@ function draw() {
 	if (statsSwitch) {
 		var totalWorkers = 0;
 		var liveColonies = 0;
-		for (var i = 0; i < colonies.length; i++) {
+		for (i = 0; i < colonies.length; i++) {
 			if (!colonies[i].dead){
 				totalWorkers += colonies[i].workers.length;
 				context.fillStyle = colonies[i].color;
@@ -431,12 +433,12 @@ animationBlurRange.onchange = function () {
 };
 scentMapButton.onfocus = function () {
 	if (this.blur) {
-		this.blur()
+		this.blur();
 	}
 };
 statsButton.onfocus = function () {
 	if (this.blur) {
-		this.blur()
+		this.blur();
 	}
 };
 animationBlurLabel.appendChild(animationBlurRange);
