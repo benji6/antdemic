@@ -1,0 +1,31 @@
+$black: #111;
+$white: #eee;
+
+body {
+  background-color: $black;
+  color: $white;
+  font-family: sans-serif;
+}
+
+button {
+  margin: 0.1em 1em;
+}
+
+canvas {
+  display: block;
+  margin: 1em auto;
+}
+
+h1 {
+  text-align: center;
+}
+
+label {
+  display: block;
+  margin: 1em;
+  text-align: center;
+}
+
+.center {
+  text-align: center;
+}

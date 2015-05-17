@@ -102,7 +102,7 @@ WorkerAnt.prototype.decide = function () {
 };
 WorkerAnt.prototype.movePolar = function() {
 	var spread = .1;
-	this.phi += (.5 - Math.random()) * 2 * spread;				
+	this.phi += (.5 - Math.random()) * 2 * spread;
 	this.x += this.maxV * (Math.cos(this.phi));
 	this.y += this.maxV * (Math.sin(this.phi));
 };
@@ -116,7 +116,7 @@ WorkerAnt.prototype.borderControl = function () {
 	if (this.x - bounceDist <= 0) {
 		if (Math.cos(this.phi) < 0) {angleMove.call(this, Math.PI);}
 	} else if (this.x + bounceDist >= canvas.width) {
-		if (Math.cos(this.phi) > 0) {angleMove.call(this, Math.PI);}	
+		if (Math.cos(this.phi) > 0) {angleMove.call(this, Math.PI);}
 	} else if (this.y - bounceDist <= 0) {
 		if (Math.sin(this.phi) < 0) {angleMove.call(this, 0);}
 	} else if (this.y + bounceDist >= canvas.height) {
@@ -335,11 +335,11 @@ var viewHolder = document.createElement('div');
 	};
 	var curryAddView = curry(addView);
 	var addViewToVH = curryAddView(viewHolder);
-	var addH2 = addViewToVH('h2');
+	var addH1 = addViewToVH('h1');
 	var addH3 = addViewToVH('h3');
 	var addP = addViewToVH('p');
-	
-	addH2('Antdemic');
+
+	addH1('Antdemic');
 	addH3('About');
 	addP('Each worker ant has a very limited sense distance and finds food using scent trails laid down by other worker ants. ' +
 		'Worker ants instinctively know their way back to their queen and feed her. ' +
@@ -349,18 +349,21 @@ var viewHolder = document.createElement('div');
 		'If a colony loses all its ants the queen will perish and the number of feeders on the canvas is reduced.');
 	addH3('Controls');
 	addP('Left click on the canvas to add a feeder and right click on a feeder to remove it.');
-	
+
 
 }());
 function appendView() {
-	viewHolder.appendChild(statsButton);
-	viewHolder.appendChild(scentMapButton);
+	var buttonsContainer = document.createElement("div");
+	buttonsContainer.className = "center";
+	buttonsContainer.appendChild(statsButton);
+	buttonsContainer.appendChild(scentMapButton);
 	viewHolder.appendChild(animationBlurLabel);
+	viewHolder.appendChild(buttonsContainer);
 	viewHolder.appendChild(canvas);
 	document.body.appendChild(viewHolder);
 }
 
-var animationBlurAlpha = .17;
+var animationBlurAlpha = 0.17;
 //requestAnimFrame
 window.requestAnimFrame=(function(){
 	return  window.requestAnimationFrame ||
